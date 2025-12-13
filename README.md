@@ -1,4 +1,4 @@
-# Forecasting Vegetation Stress in UK Farmlands
+# Forecasting Vegetation Stress in Region Sindh Pakistan
 
 A comprehensive system for predicting vegetation stress in farmland areas by combining satellite indices (NDVI, MSI) with weather data. This project uses Sentinel-2 satellite imagery and meteorological data to forecast potential crop stress or drought conditions.
 
