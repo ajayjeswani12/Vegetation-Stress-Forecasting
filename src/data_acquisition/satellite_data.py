@@ -72,15 +72,9 @@ class SatelliteDataAcquisition:
         min_lon, max_lon = bounds['min_lon'], bounds['max_lon']
         min_lat, max_lat = bounds['min_lat'], bounds['max_lat']
         
-        # Convert km to degrees based on latitude
-        # At equator: 1 degree ≈ 111 km
-        # Latitude conversion: 1 km ≈ 0.009 degrees (constant)
-        # Longitude conversion: 1 km ≈ 0.009 / cos(latitude) degrees
         lat_center = (min_lat + max_lat) / 2
-        grid_size_deg_lat = grid_size_km * 0.009  # Constant for latitude
-        grid_size_deg_lon = grid_size_km * 0.009 / np.cos(np.radians(lat_center))  # Varies by latitude
-        
-        # Create grid with proper lat/lon spacing
+        grid_size_deg_lat = grid_size_km * 0.009
+        grid_size_deg_lon = grid_size_km * 0.009 / np.cos(np.radians(lat_center))
         lons = np.arange(min_lon, max_lon, grid_size_deg_lon)
         lats = np.arange(min_lat, max_lat, grid_size_deg_lat)
         
@@ -108,7 +102,6 @@ class SatelliteDataAcquisition:
     
     def calculate_msi(self, image: 'ee.Image') -> 'ee.Image':
         """Calculate MSI (Moisture Stress Index) from Sentinel-2 image"""
-        # MSI = SWIR1 / NIR = B11 / B8
         msi = image.select('B11').divide(image.select('B8')).rename('MSI')
         return msi
     
@@ -124,12 +117,11 @@ class SatelliteDataAcquisition:
             bounds['max_lon'], bounds['max_lat']
         ])
         
-        # Get Sentinel-2 collection
         collection = (ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
                      .filterBounds(aoi)
                      .filterDate(start_date, end_date)
                      .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', cloud_cover_max))
-                     .select(['B4', 'B8', 'B11', 'QA60']))  # Red, NIR, SWIR1, Quality
+                     .select(['B4', 'B8', 'B11', 'QA60']))
         
         return collection
     
@@ -175,32 +167,20 @@ class SatelliteDataAcquisition:
                 return img.addBands([ndvi, msi])
             
             monthly_collection = monthly_collection.map(add_indices)
-            
-            # Compute monthly median (reduces cloud effects)
             monthly_median = monthly_collection.select(['NDVI', 'MSI']).median()
-            
-            # Extract values for each grid cell
             for idx, row in grid_gdf.iterrows():
                 cell_id = row['cell_id']
                 cell_geom = row['geometry']
-                
-                # Convert to EE geometry
-                coords = list(cell_geom.exterior.coords)
-                ee_geom = ee.Geometry.Polygon([[[lon, lat] for lon, lat in coords]])
-                
-                # Sample the image at the grid cell center
                 center = cell_geom.centroid
                 point = ee.Geometry.Point([center.x, center.y])
                 
-                # Get pixel values using actual GEE data extraction
                 try:
                     sample = monthly_median.sample(
                         region=point,
-                        scale=10,  # Sentinel-2 resolution
+                        scale=10,
                         numPixels=1
                     )
                     
-                    # Extract actual values from GEE sample
                     sample_info = sample.getInfo()
                     
                     if sample_info and 'features' in sample_info and len(sample_info['features']) > 0:

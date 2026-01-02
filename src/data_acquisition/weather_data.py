@@ -100,7 +100,6 @@ class WeatherDataAcquisition:
         
         # ERA5-Land dataset parameters
         # Map our variable names to ERA5 variable names
-        # Note: CDS API uses long names in requests, but NetCDF files use short names
         era5_variable_map = {
             'temperature_2m': '2m_temperature',  # CDS API name
             'precipitation': 'total_precipitation',  # CDS API name
@@ -108,7 +107,6 @@ class WeatherDataAcquisition:
             'soil_moisture_0_to_7cm': 'volumetric_soil_water_layer_1'  # CDS API name
         }
         
-        # Map CDS API names to NetCDF short names (what's actually in the files)
         era5_netcdf_name_map = {
             '2m_temperature': 't2m',
             'total_precipitation': 'tp',
@@ -127,14 +125,8 @@ class WeatherDataAcquisition:
                             'surface_solar_radiation_downwards', 
                             'volumetric_soil_water_layer_1']
         
-        # Limit variables if too many (to reduce request size)
-        # Start with essential variables only
-        essential_vars = ['2m_temperature', 'total_precipitation']
         if len(era5_variables) > 2:
             print(f"Warning: Requesting {len(era5_variables)} variables may exceed cost limits.")
-            print(f"  Consider reducing to essential variables only in config.yaml")
-            print(f"  Essential: temperature_2m, precipitation")
-            print(f"  Optional: shortwave_radiation, soil_moisture_0_to_7cm")
         
         # Parse dates
         start_dt = pd.to_datetime(start_date)
@@ -444,11 +436,7 @@ class WeatherDataAcquisition:
             print(f"  Opening NetCDF file: {nc_file}")
             ds = xr.open_dataset(nc_file, engine='netcdf4')
             
-            # Debug: Print available variables
-            print(f"  Available variables in file: {list(ds.data_vars.keys())}")
-            print(f"  Available coordinates: {list(ds.coords.keys())}")
-            
-            # Map CDS API names to NetCDF short names (what's actually in the files)
+            # Map CDS API names to NetCDF short names
             era5_netcdf_name_map = {
                 '2m_temperature': 't2m',
                 'total_precipitation': 'tp',
@@ -456,12 +444,9 @@ class WeatherDataAcquisition:
                 'volumetric_soil_water_layer_1': 'swvl1'
             }
             
-            # Check if we have any of the expected variables (using short NetCDF names)
             reverse_map = {v: k for k, v in era5_variable_map.items()}
-            
-            # First, try to find variables by their NetCDF short names
             available_netcdf_vars = []
-            var_mapping = {}  # Maps NetCDF name -> our name
+            var_mapping = {}
             
             for cds_name, netcdf_name in era5_netcdf_name_map.items():
                 if netcdf_name in ds.data_vars:
@@ -477,18 +462,10 @@ class WeatherDataAcquisition:
                     var_mapping[cds_name] = reverse_map[cds_name]
             
             if not available_netcdf_vars:
-                print(f"  WARNING: None of the expected ERA5 variables found in file!")
-                print(f"  Expected (CDS API): {list(reverse_map.keys())}")
-                print(f"  Expected (NetCDF short): {list(era5_netcdf_name_map.values())}")
-                print(f"  Found: {list(ds.data_vars.keys())}")
                 ds.close()
                 return None
             
-            print(f"  Processing variables: {available_netcdf_vars}")
-            print(f"  Variable mapping: {var_mapping}")
-            
-            # Convert to DataFrame (this will be large for hourly data, but we aggregate immediately)
-            # Select only the variables we need to reduce memory
+            # Convert to DataFrame and aggregate immediately
             vars_to_select = list(ds.coords.keys()) + available_netcdf_vars
             df = ds[vars_to_select].to_dataframe().reset_index()
             
@@ -536,8 +513,6 @@ class WeatherDataAcquisition:
                     agg_dict['soil_moisture_0_to_7cm'] = 'mean'
                 
                 if not agg_dict:
-                    print(f"  WARNING: No variables to aggregate after renaming")
-                    print(f"  Available columns: {list(df.columns)}")
                     return None
                 
                 # Group by year_month and spatial coordinates
@@ -558,21 +533,14 @@ class WeatherDataAcquisition:
                     monthly_df['lat'] = np.nan
                     monthly_df['lon'] = np.nan
                 
-                print(f"  Aggregated to {len(monthly_df)} monthly records")
-                
-                # Free memory
                 del df
                 
                 return monthly_df
             else:
-                print(f"  ERROR: No time coordinate found in file")
-                print(f"  Available columns: {list(df.columns)}")
                 return None
                 
         except Exception as e:
-            import traceback
-            print(f"  ERROR processing {nc_file}: {e}")
-            print(f"  Traceback: {traceback.format_exc()}")
+            print(f"Error processing {nc_file}: {e}")
             return None
     
     def get_era5_data_for_grid(self, grid_df: pd.DataFrame, bounds: Dict,

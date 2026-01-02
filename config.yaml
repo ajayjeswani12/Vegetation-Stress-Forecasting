@@ -8,85 +8,76 @@ study_area:
     max_lon: 71.5
     min_lat: 24.0
     max_lat: 28.5
-  grid_size_km: 25.0  # More cells for better spatial coverage
+  grid_size_km: 25.0
 
 # Time Period
 time_period:
-  start_date: "2021-01-01"  # Extended to 4 years for more training data
-  end_date: "2024-12-31"  # ERA5 has 5-day delay, October 2025 doesn't exist yet
-  frequency: "monthly"  # monthly aggregation
+  start_date: "2021-01-01"
+  end_date: "2024-12-31"
+  frequency: "monthly"
 
 # Satellite Data Settings
 satellite:
-  source: "sentinel-2"  # Options: sentinel-2, landsat
-  cloud_cover_max: 20  # Maximum cloud cover percentage
+  source: "sentinel-2"
+  cloud_cover_max: 20
   indices:
-    - "NDVI"  # Normalized Difference Vegetation Index
-    - "MSI"   # Moisture Stress Index
+    - "NDVI"
+    - "MSI"
   
-  # OpenEO settings (alternative to GEE)
   openeo:
-    backend: "openeo-earthengine"  # or "openeo-vito"
-    use_openeo: false  # Set to true to use OpenEO instead of GEE
+    backend: "openeo-earthengine"
+    use_openeo: false
   
-  # Google Earth Engine settings
   gee:
     use_gee: true
-    project: null  # Set your GEE project ID if needed
+    project: null
 
 # Weather Data Settings
 weather:
-  source: "era5"  # Options: open-meteo, era5, met-office
+  source: "era5"
   variables:
     - "temperature_2m"
     - "precipitation"
-    - "soil_moisture_0_to_7cm"  # If available
+    - "soil_moisture_0_to_7cm"
     - "shortwave_radiation"
   
-  # Open-Meteo API settings
   open_meteo:
     base_url: "https://archive-api.open-meteo.com/v1/archive"
-    timezone: "Asia/Karachi"  # Pakistan timezone
-    elevation: null  # Will use grid cell elevation if available
+    timezone: "Asia/Karachi"
+    elevation: null
   
-  # ERA5 CDS API settings
-  # Note: Credentials should be in ~/.cdsapirc file for security
-  # Format: url: https://cds.climate.copernicus.eu/api/v2
-  #         key: your-key-here
   era5:
-    # CDS API credentials are read from ~/.cdsapirc file
-    # See: https://cds.climate.copernicus.eu/api-how-to
     dataset: "reanalysis-era5-land"
     retry_max: 3
     retry_delay_seconds: 60
 
 # Feature Engineering
 features:
-  lag_months: [1, 2, 3, 6, 12]  # Lag features including seasonal patterns (6, 12 months)
-  rolling_windows: [3, 6, 12]  # Rolling averages including annual cycles
-  normalize_per_cell: true  # Normalize features per grid cell
+  lag_months: [1, 2, 3, 6, 12]
+  rolling_windows: [3, 6, 12]
+  normalize_per_cell: true
 
 # Model Settings
 models:
   baseline:
-    type: "xgboost"  # Options: random_forest, xgboost, lightgbm
-    n_estimators: 300  # Increased for better performance
-    max_depth: 8  # Reduced to prevent overfitting
-    learning_rate: 0.05  # Reduced for more stable training
-    subsample: 0.8  # Row sampling to prevent overfitting
-    colsample_bytree: 0.8  # Feature sampling
-    min_child_weight: 3  # Regularization
-    reg_alpha: 0.1  # L1 regularization
-    reg_lambda: 1.0  # L2 regularization
+    type: "xgboost"
+    n_estimators: 300
+    max_depth: 8
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    min_child_weight: 3
+    reg_alpha: 0.1
+    reg_lambda: 1.0
   
   advanced:
-    type: "lstm"  # Options: lstm, tcn
-    sequence_length: 6  # Reduced to create more sequences from available data
-    hidden_units: 64  # Reduced to prevent overfitting (was 128)
-    epochs: 100  # More training epochs (early stopping will prevent overfitting)
-    batch_size: 16  # Smaller batches for better gradient updates
-    learning_rate: 0.001  # Explicit learning rate
-    dropout: 0.4  # Increased dropout for better regularization (was 0.3)
+    type: "lstm"
+    sequence_length: 6
+    hidden_units: 64
+    epochs: 100
+    batch_size: 16
+    learning_rate: 0.001
+    dropout: 0.4
     validation_split: 0.2
 
 # Output Settings

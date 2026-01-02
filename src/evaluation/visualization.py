@@ -59,7 +59,6 @@ class Visualizer:
         axes[0].set_title(f'{title} - Scatter Plot')
         axes[0].grid(True, alpha=0.3)
         
-        # Time series plot (if indices available)
         axes[1].plot(y_true[:100], label='Actual', alpha=0.7)
         axes[1].plot(y_pred[:100], label='Predicted', alpha=0.7)
         axes[1].set_xlabel('Sample Index')
@@ -178,7 +177,6 @@ class Visualizer:
             axes[idx].grid(True, alpha=0.3)
             axes[idx].tick_params(axis='x', rotation=45)
         
-        # Hide extra subplots
         for idx in range(n_cells, len(axes)):
             axes[idx].axis('off')
         
@@ -236,7 +234,6 @@ class Visualizer:
             ).add_to(m)
         
         if save_path:
-            # If save_path is PNG but we're using folium, change to HTML
             if save_path.endswith('.png'):
                 save_path = save_path.replace('.png', '.html')
             m.save(save_path)
@@ -272,16 +269,13 @@ class Visualizer:
     def _get_stress_color(self, value: float, stress_col: str) -> str:
         """Get color based on stress value"""
         if stress_col == 'NDVI':
-            # NDVI: higher is better (green), lower is stress (red)
-            # Adjusted for Pakistan's desert climate (Sindh has lower baseline vegetation)
             if value > 0.5:
-                return 'green'  # Healthy irrigated crops
+                return 'green'
             elif value > 0.3:
-                return 'yellow'  # Moderate vegetation/stressed crops
+                return 'yellow'
             else:
-                return 'red'  # Desert/barren/severe stress
+                return 'red'
         elif stress_col == 'MSI':
-            # MSI: lower is better, higher is stress
             if value < 1.0:
                 return 'green'
             elif value < 2.0:

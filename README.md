@@ -70,7 +70,7 @@ python main.py --model both
 python main.py --force
 ```
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 .
@@ -97,7 +97,7 @@ python main.py --force
 └── figures/                 # Visualizations (created automatically)
 ```
 
-## ⚙️ Configuration
+##  Configuration
 
 Edit `config.yaml` to customize:
 
@@ -126,7 +126,7 @@ time_period:
   frequency: "monthly"
 ```
 
-## 📊 Workflow Steps
+## Workflow Steps
 
 ### Step 1: Satellite Data Acquisition
 - Creates grid cells over study area
@@ -176,7 +176,7 @@ Models are evaluated using:
 
 Results are saved in the `results/` directory and visualized in `figures/`.
 
-## 🗺️ Visualizations
+##  Visualizations
 
 The project generates several types of visualizations:
 
@@ -208,7 +208,7 @@ The codebase is designed to be extensible:
 - Add new satellite sources in `src/data_acquisition/satellite_data.py`
 - Add new weather sources in `src/data_acquisition/weather_data.py`
 
-## 📝 Notes
+##  Notes
 
 ### Data Acquisition
 
@@ -227,7 +227,7 @@ The codebase is designed to be extensible:
 - Weather data aggregation assumes monthly frequency
 - Grid cell size affects resolution vs processing time trade-off
 
-## 🤝 Contributing
+##  Contributing
 
 This is a research/educational project. Feel free to:
 - Report issues
@@ -254,5 +254,5 @@ This project is provided as-is for research and educational purposes.
 
 ---
 
-**For questions or issues**, please check the code comments or configuration file for detailed explanations.
+**For questions or issues**, please check the code comments or configuration file for detailed explanations or contact me on ajay.jeswani73@gmail.com
 

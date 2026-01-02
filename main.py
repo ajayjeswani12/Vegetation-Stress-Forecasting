@@ -1,6 +1,6 @@
 """
 Main Workflow Script
-Forecasting Vegetation Stress in UK Farmlands
+Forecasting Vegetation Stress in Farmlands
 """
 
 import yaml
@@ -215,7 +215,6 @@ def step6_train_advanced_model(config: Dict, features_df: pd.DataFrame,
     
     models_dir = Path(config['output']['models_dir'])
     model_file = models_dir / 'advanced_model.h5'
-    # Check for actual saved files (save method creates _model.h5 and _metadata.pkl)
     actual_model_file = models_dir / 'advanced_model_model.h5'
     metadata_file = models_dir / 'advanced_model_metadata.pkl'
     
@@ -284,7 +283,6 @@ def step7_evaluation_and_visualization(config: Dict, features_df: pd.DataFrame,
     
     visualizer = Visualizer(config)
     
-    # Load and display saved metrics if available (for advanced models)
     if model_type == 'advanced':
         models_dir = Path(config['output']['models_dir'])
         metrics_file = models_dir / 'advanced_model_metrics.json'
@@ -362,7 +360,6 @@ def step7_evaluation_and_visualization(config: Dict, features_df: pd.DataFrame,
     recent_dates = features_df['date'].unique()[-3:]
     for date in recent_dates:
         date_str = str(date.date()).replace('-', '_')
-        # Use HTML for folium maps (or PNG if matplotlib is used)
         visualizer.create_stress_map(
             features_df, str(date.date()),
             stress_col='NDVI',
@@ -477,20 +474,15 @@ def main():
             step7_evaluation_and_visualization(config, features_df, baseline_model, 'baseline')
             models_evaluated = True
         
-        # Try to evaluate advanced model
         from src.models import AdvancedTimeSeriesModel
-        # The save method creates advanced_model_model.h5, so check for that
         advanced_model_file = models_dir / 'advanced_model_model.h5'
         advanced_metadata_file = models_dir / 'advanced_model_metadata.pkl'
-        
-        # Check if either the model file or metadata exists (both are needed)
         if advanced_model_file.exists() and advanced_metadata_file.exists():
             print("\n" + "="*60)
             print("Evaluating Advanced Model")
             print("="*60)
             try:
                 advanced_model = AdvancedTimeSeriesModel(config)
-                # Load using the base filename (load method will find _model.h5 and _metadata.pkl)
                 advanced_model.load(str(models_dir / 'advanced_model.h5'))
                 step7_evaluation_and_visualization(config, features_df, advanced_model, 'advanced')
                 models_evaluated = True

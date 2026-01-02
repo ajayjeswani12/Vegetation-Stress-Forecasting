@@ -89,15 +89,13 @@ class FeatureEngineer:
         df['year'] = df['date'].dt.year
         df['quarter'] = df['date'].dt.quarter
         
-        # Season (Northern Hemisphere)
         df['season'] = df['month'].map({
             12: 0, 1: 0, 2: 0,   # Winter
             3: 1, 4: 1, 5: 1,    # Spring
             6: 2, 7: 2, 8: 2,    # Summer
-            9: 3, 10: 3, 11: 3   # Fall
+            9: 3, 10: 3, 11: 3
         })
         
-        # Cyclical encoding for month
         df['month_sin'] = np.sin(2 * np.pi * df['month'] / 12)
         df['month_cos'] = np.cos(2 * np.pi * df['month'] / 12)
         
@@ -148,15 +146,12 @@ class FeatureEngineer:
         """
         df = df.copy()
         
-        # NDVI * Temperature (stress indicator)
         if 'NDVI' in df.columns and 'temperature_2m' in df.columns:
             df['NDVI_temp_interaction'] = df['NDVI'] * df['temperature_2m']
         
-        # MSI * Precipitation (moisture availability)
         if 'MSI' in df.columns and 'precipitation' in df.columns:
             df['MSI_precip_interaction'] = df['MSI'] * df['precipitation']
         
-        # NDVI / MSI (vegetation health vs stress)
         if 'NDVI' in df.columns and 'MSI' in df.columns:
             df['NDVI_MSI_ratio'] = df['NDVI'] / (df['MSI'] + 1e-8)
         
@@ -197,14 +192,10 @@ class FeatureEngineer:
         print("Creating interaction features...")
         df = self.create_interaction_features(df)
         
-        # Normalize per cell if requested
         if self.should_normalize_per_cell:
             print("Normalizing features per cell...")
-            normalize_cols = [col for col in feature_columns 
-                            if col not in ['NDVI', 'MSI']]  # Don't normalize targets
+            normalize_cols = [col for col in feature_columns if col not in ['NDVI', 'MSI']]
             df = self.normalize_per_cell(df, normalize_cols)
-        
-        # Create target variable (next month's value)
         if target_column in df.columns:
             df[f'{target_column}_next'] = df.groupby('cell_id')[target_column].shift(-1)
         
